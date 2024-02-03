@@ -38,8 +38,8 @@ func ImagesToPDF(imgs []ImgFile) (*PDFFile, error) {
 		if len(img.Contents) == 0 {
 			continue
 		}
-		// fmt.Println(img.Filename)
-		// Register the image with the PDF.
+
+		// Get image dimensions using ImageInfo.
 		imgInfo := pdf.RegisterImageOptionsReader(imgName, gofpdf.ImageOptions{
 			ImageType: img.extension,
 			ReadDpi:   true,
@@ -51,14 +51,23 @@ func ImagesToPDF(imgs []ImgFile) (*PDFFile, error) {
 			return nil, fmt.Errorf("failed to register image")
 		}
 
+		// Calculate the aspect ratio of the image.
+		aspectRatio := float64(imgInfo.Width()) / float64(imgInfo.Height())
+
 		// Add a new page for each image.
 		pdf.AddPage()
 
 		// Calculate the width and height of the image on the page.
-		imgWidth, imgHeight := pdf.GetPageSize()
+		pageWidth, pageHeight := pdf.GetPageSize()
+		imgWidthOnPage := pageWidth
+		imgHeightOnPage := imgWidthOnPage / aspectRatio
+
+		// Calculate the position to center the image on the page.
+		x := (pageWidth - imgWidthOnPage) / 2
+		y := (pageHeight - imgHeightOnPage) / 2
 
 		// Place the image on the page.
-		pdf.ImageOptions(imgName, 0, 0, imgWidth, imgHeight, false, gofpdf.ImageOptions{
+		pdf.ImageOptions(imgName, x, y, imgWidthOnPage, imgHeightOnPage, false, gofpdf.ImageOptions{
 			ImageType: img.extension,
 			ReadDpi:   true,
 		}, 0, "")
