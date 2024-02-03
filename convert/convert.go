@@ -38,7 +38,7 @@ func ImagesToPDF(imgs []ImgFile) (*PDFFile, error) {
 		if len(img.Contents) == 0 {
 			continue
 		}
-
+		// fmt.Println(img.Filename)
 		// Register the image with the PDF.
 		imgInfo := pdf.RegisterImageOptionsReader(imgName, gofpdf.ImageOptions{
 			ImageType: img.extension,
@@ -78,6 +78,7 @@ func ImagesToPDF(imgs []ImgFile) (*PDFFile, error) {
 // ListFiles retrieves a list of image files from the specified directory.
 // It returns a slice of ImgFile objects and an error if the operation encounters any issues.
 func ListFiles(dir string) ([]ImgFile, error) {
+	imgFormats := []string{"jpg", "jpeg", "png", "gif"}
 	// Initialize an empty slice to store ImgFile objects.
 	var imgFiles []ImgFile
 
@@ -100,8 +101,11 @@ func ListFiles(dir string) ([]ImgFile, error) {
 			fp := filepath.Join(dir, entry.Name())
 
 			// Extract the file extension.
-			ext := fp[strings.Index(fp, ".")+1:]
+			ext := strings.ToLower(fp[strings.Index(fp, ".")+1:])
 
+			if !stringInSlice(ext, imgFormats) {
+				continue
+			}
 			// Read the contents of the file.
 			contents, err := os.ReadFile(fp)
 			if err != nil {
@@ -153,4 +157,13 @@ func ArchiveImages(dir string, imgs []ImgFile) error {
 	}
 
 	return nil
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }

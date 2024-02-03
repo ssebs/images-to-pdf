@@ -14,7 +14,7 @@ func main() {
 
 	dir := flag.String("d", ".", "Folder where images are stored")
 	dest := flag.String("o", "out.pdf", "Filename of PDF file")
-	shouldArchive := flag.Bool("a", false, "Whether or not to archive images")
+	shouldArchive := flag.Bool("a", true, "Whether or not to archive images")
 	flag.Parse()
 
 	// Get files in dir
