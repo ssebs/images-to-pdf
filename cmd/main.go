@@ -7,10 +7,13 @@ import (
 	"os"
 
 	"github.com/ssebs/images-to-pdf/convert"
+	"github.com/ssebs/images-to-pdf/gui"
 )
 
 func main() {
 	fmt.Println("Images to PDF")
+	gui := gui.NewGUI()
+	gui.Run()
 
 	dir := flag.String("d", ".", "Folder where images are stored")
 	dest := flag.String("o", "out.pdf", "Filename of PDF file")
