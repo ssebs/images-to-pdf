@@ -2,4 +2,4 @@ module github.com/ssebs/images-to-pdf
 
 go 1.21.1
 
-require github.com/jung-kurt/gofpdf v1.16.2
+require github.com/go-pdf/fpdf v0.9.0

@@ -6,9 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
-	"github.com/jung-kurt/gofpdf"
+	"github.com/go-pdf/fpdf"
 )
 
 // ImgFile represents an image file with its contents and extension.
@@ -27,7 +26,7 @@ type PDFFile struct {
 // It returns a pointer to a PDFFile and an error if the operation encounters any issues.
 func ImagesToPDF(imgs []ImgFile) (*PDFFile, error) {
 	// Create a new PDF instance with A4 size and millimeter units.
-	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf := fpdf.New("P", "mm", "A4", "")
 
 	// Iterate through the list of image files.
 	for idx, img := range imgs {
@@ -40,7 +39,7 @@ func ImagesToPDF(imgs []ImgFile) (*PDFFile, error) {
 		}
 
 		// Get image dimensions using ImageInfo.
-		imgInfo := pdf.RegisterImageOptionsReader(imgName, gofpdf.ImageOptions{
+		imgInfo := pdf.RegisterImageOptionsReader(imgName, fpdf.ImageOptions{
 			ImageType: img.extension,
 			ReadDpi:   true,
 		}, bytes.NewReader(img.Contents))
@@ -52,25 +51,29 @@ func ImagesToPDF(imgs []ImgFile) (*PDFFile, error) {
 		}
 
 		// Calculate the aspect ratio of the image.
-		aspectRatio := float64(imgInfo.Width()) / float64(imgInfo.Height())
+		// aspectRatio := float64(imgInfo.Width()) / float64(imgInfo.Height())
 
-		// Add a new page for each image.
-		pdf.AddPage()
+		// Add a new page for each image. P for portrait
+		pdf.AddPageFormat("P", fpdf.SizeType{Wd: imgInfo.Width(), Ht: imgInfo.Height()})
 
-		// Calculate the width and height of the image on the page.
-		pageWidth, pageHeight := pdf.GetPageSize()
-		imgWidthOnPage := pageWidth
-		imgHeightOnPage := imgWidthOnPage / aspectRatio
+		// // Calculate the width and height of the image on the page.
+		// pageWidth, pageHeight := pdf.GetPageSize()
+		// imgWidthOnPage := pageWidth
+		// imgHeightOnPage := imgWidthOnPage / aspectRatio
 
-		// Calculate the position to center the image on the page.
-		x := (pageWidth - imgWidthOnPage) / 2
-		y := (pageHeight - imgHeightOnPage) / 2
+		// // Calculate the position to center the image on the page.
+		// x := (pageWidth - imgWidthOnPage) / 2
+		// y := (pageHeight - imgHeightOnPage) / 2
 
 		// Place the image on the page.
-		pdf.ImageOptions(imgName, x, y, imgWidthOnPage, imgHeightOnPage, false, gofpdf.ImageOptions{
+		pdf.ImageOptions(imgName, 0, 0, -1, -1, false, fpdf.ImageOptions{
 			ImageType: img.extension,
 			ReadDpi:   true,
 		}, 0, "")
+		// pdf.ImageOptions(imgName, x, y, imgWidthOnPage, imgHeightOnPage, false, fpdf.ImageOptions{
+		// 	ImageType: img.extension,
+		// 	ReadDpi:   true,
+		// }, 0, "")
 	}
 
 	// Generate PDF contents.
@@ -109,8 +112,8 @@ func ListFiles(dir string) ([]ImgFile, error) {
 			// Create the full file path.
 			fp := filepath.Join(dir, entry.Name())
 
-			// Extract the file extension.
-			ext := strings.ToLower(fp[strings.Index(fp, ".")+1:])
+			// Extract the file extension. (remove the . too)
+			ext := filepath.Ext(fp)[1:]
 
 			if !stringInSlice(ext, imgFormats) {
 				continue
