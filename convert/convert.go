@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/go-pdf/fpdf"
 )
@@ -102,11 +105,12 @@ func ListFiles(dir string) ([]ImgFile, error) {
 
 	// Sort entries by name.
 	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].Name() < entries[j].Name()
+		return compareFilenames(entries[i].Name(), entries[j].Name())
 	})
 
 	// Iterate through directory entries.
 	for _, entry := range entries {
+
 		// Skip directories.
 		if !entry.IsDir() {
 			// Create the full file path.
@@ -118,6 +122,9 @@ func ListFiles(dir string) ([]ImgFile, error) {
 			if !stringInSlice(ext, imgFormats) {
 				continue
 			}
+
+			fmt.Println("e:", entry.Name())
+
 			// Read the contents of the file.
 			contents, err := os.ReadFile(fp)
 			if err != nil {
@@ -178,4 +185,38 @@ func stringInSlice(a string, list []string) bool {
 		}
 	}
 	return false
+}
+
+func compareFilenames(a, b string) bool {
+	// Special case: "Image.jpg" comes before "Image (X).jpg"
+	if a == "Image.jpg" && strings.HasPrefix(b, "Image (") {
+		return true
+	} else if b == "Image.jpg" && strings.HasPrefix(a, "Image (") {
+		return false
+	}
+
+	// Extract numeric parts from filenames
+	re := regexp.MustCompile(`\d+`)
+	numsA := re.FindAllString(a, -1)
+	numsB := re.FindAllString(b, -1)
+
+	// If both filenames have numeric parts
+	if len(numsA) > 0 && len(numsB) > 0 {
+		numA, _ := strconv.Atoi(numsA[len(numsA)-1])
+		numB, _ := strconv.Atoi(numsB[len(numsB)-1])
+		// Compare numeric parts
+		if numA != numB {
+			return numA < numB
+		}
+	}
+
+	// If one filename has a numeric part and the other doesn't, prioritize the one with the numeric part
+	if len(numsA) > 0 {
+		return true
+	} else if len(numsB) > 0 {
+		return false
+	}
+
+	// Default lexicographic comparison
+	return a < b
 }
