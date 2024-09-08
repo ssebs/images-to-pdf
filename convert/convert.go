@@ -59,24 +59,11 @@ func ImagesToPDF(imgs []ImgFile) (*PDFFile, error) {
 		// Add a new page for each image. P for portrait
 		pdf.AddPageFormat("P", fpdf.SizeType{Wd: imgInfo.Width(), Ht: imgInfo.Height()})
 
-		// // Calculate the width and height of the image on the page.
-		// pageWidth, pageHeight := pdf.GetPageSize()
-		// imgWidthOnPage := pageWidth
-		// imgHeightOnPage := imgWidthOnPage / aspectRatio
-
-		// // Calculate the position to center the image on the page.
-		// x := (pageWidth - imgWidthOnPage) / 2
-		// y := (pageHeight - imgHeightOnPage) / 2
-
 		// Place the image on the page.
 		pdf.ImageOptions(imgName, 0, 0, -1, -1, false, fpdf.ImageOptions{
 			ImageType: img.extension,
 			ReadDpi:   true,
 		}, 0, "")
-		// pdf.ImageOptions(imgName, x, y, imgWidthOnPage, imgHeightOnPage, false, fpdf.ImageOptions{
-		// 	ImageType: img.extension,
-		// 	ReadDpi:   true,
-		// }, 0, "")
 	}
 
 	// Generate PDF contents.
@@ -113,33 +100,26 @@ func ListFiles(dir string) ([]ImgFile, error) {
 
 		// Skip directories.
 		if !entry.IsDir() {
-			// Create the full file path.
+			fmt.Println("e:", entry.Name())
 			fp := filepath.Join(dir, entry.Name())
 
 			// Extract the file extension. (remove the . too)
 			ext := filepath.Ext(fp)[1:]
-
 			if !stringInSlice(ext, imgFormats) {
 				continue
 			}
 
-			fmt.Println("e:", entry.Name())
-
-			// Read the contents of the file.
 			contents, err := os.ReadFile(fp)
 			if err != nil {
 				return nil, err
 			}
 
-			// Append ImgFile object to the slice.
 			imgFiles = append(imgFiles, ImgFile{
 				Contents: contents, extension: ext,
 				Filename: fp,
 			})
 		}
 	}
-
-	// Return the list of ImgFile objects.
 	return imgFiles, nil
 }
 
@@ -150,12 +130,7 @@ func ArchiveImages(dir string, imgs []ImgFile) error {
 	if len(imgs) == 0 {
 		return fmt.Errorf("no images provided for archiving")
 	}
-
-	// Define the name of the archive folder.
-	archiveFolder := "archive"
-
-	// Create the full path for the archive folder.
-	archiveFolderPath := filepath.Join(dir, archiveFolder)
+	archiveFolderPath := filepath.Join(dir, "archive")
 
 	// Check if the archive folder exists, create it if not.
 	if _, err := os.Stat(archiveFolderPath); os.IsNotExist(err) {
@@ -166,15 +141,11 @@ func ArchiveImages(dir string, imgs []ImgFile) error {
 
 	// Move each image to the archive folder.
 	for _, img := range imgs {
-		// Generate the destination path within the archive folder.
 		archiveFilePath := filepath.Join(archiveFolderPath, filepath.Base(img.Filename))
-
-		// Move the image file to the archive folder.
 		if err := os.Rename(img.Filename, archiveFilePath); err != nil {
 			return fmt.Errorf("failed to move image to archive folder: %v", err)
 		}
 	}
-
 	return nil
 }
 
